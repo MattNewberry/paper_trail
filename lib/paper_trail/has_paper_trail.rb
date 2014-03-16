@@ -278,7 +278,13 @@ module PaperTrail
       end
 
       def changes_for_paper_trail
-        self.changed_attributes.delete_if do |key, value|
+        changed = self.changes
+        changed = changed.each do |key,value|
+          if value.is_a?(Array) && value.count == 2
+            changed[key] = value[1]
+          end
+        end
+        changed.delete_if do |key, value|
           !notably_changed.include?(key)
         end.tap { |changes| self.class.serialize_attribute_changes(changes) }
       end
