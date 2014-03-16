@@ -137,9 +137,8 @@ module PaperTrail
         serialized_attributes.each do |key, coder|
           if changes.key?(key)
             coder = PaperTrail::Serializers::YAML unless coder.respond_to?(:dump) # Fall back to YAML if `coder` has no `dump` method
-            old_value, new_value = changes[key]
-            changes[key] = [coder.dump(old_value),
-                            coder.dump(new_value)]
+            new_value = changes[key]
+            changes[key] = coder.load(new_value)
           end
         end
       end
@@ -151,9 +150,8 @@ module PaperTrail
         serialized_attributes.each do |key, coder|
           if changes.key?(key)
             coder = PaperTrail::Serializers::YAML unless coder.respond_to?(:dump)
-            old_value, new_value = changes[key]
-            changes[key] = [coder.load(old_value),
-                            coder.load(new_value)]
+            new_value = changes[key]
+            changes[key] = coder.load(new_value)
           end
         end
       end
@@ -280,7 +278,7 @@ module PaperTrail
       end
 
       def changes_for_paper_trail
-        self.changes.delete_if do |key, value|
+        self.changed_attributes.delete_if do |key, value|
           !notably_changed.include?(key)
         end.tap { |changes| self.class.serialize_attribute_changes(changes) }
       end
